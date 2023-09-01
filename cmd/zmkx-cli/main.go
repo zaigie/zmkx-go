@@ -79,10 +79,15 @@ func main() {
 		Run: func(cmd *cobra.Command, args []string) {
 			devices := zmkx.FindDevices()
 			file, _ := cmd.Flags().GetString("file")
+			threshold, _ := cmd.Flags().GetInt("threshold")
+			if threshold < 0 || threshold > 65535 {
+				fmt.Println("Threshold must be between 0 and 65535.")
+				os.Exit(1)
+			}
 			for _, device := range devices {
 				fmt.Println("=================================")
 				fmt.Println("Device:", device.Name)
-				imageBytes, err := zmkx.LoadImage(file, 0)
+				imageBytes, err := zmkx.LoadImage(file, uint16(threshold))
 				if err != nil {
 					fmt.Println(err)
 					return
@@ -93,6 +98,7 @@ func main() {
 		},
 	}
 	cmdEink.Flags().StringP("file", "f", "", "Eink image filename")
+	cmdEink.Flags().IntP("threshold", "t", 0, "Eink image threshold (1-65535) (default 32768)")
 	rootCmd.AddCommand(cmdVersion, cmdKnob, cmdMotor, cmdRgb, cmdEink)
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

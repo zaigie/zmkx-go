@@ -26,7 +26,9 @@ zmkx-cli motor
 # 获取RGB状态
 zmkx-cli rgb
 # 设置墨水屏
-zmkx-cli eink -f {*.jpg}
+zmkx-cli eink -f {*.jpg|png}
+# 设置墨水屏翻转阈值（1-65535，默认为32768）
+zmkx-cli eink -f {*.jpg|png} -t 65535
 ```
 
 ## 开发
