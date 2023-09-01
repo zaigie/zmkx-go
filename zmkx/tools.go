@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"image/draw"
 	_ "image/jpeg"
+	_ "image/png"
 	"log"
 	"math/rand"
 	"os"
