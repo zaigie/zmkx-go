@@ -1,26 +1,42 @@
 package zmkx
 
 import (
-	"fmt"
-
 	"github.com/sstallion/go-hid"
 )
 
-func Hex2String(n uint16) string {
-	return fmt.Sprintf("%#04x", n)
+func filterDevices(devices []*ZMKXDevice, features []string) []*ZMKXDevice {
+	if len(features) == 0 {
+		return devices
+	}
+	var filtered []*ZMKXDevice
+	for _, device := range devices {
+		deviceFeatures := device.GetVersion()["features"].(map[string]interface{})
+		for _, feature := range features {
+			if val, ok := deviceFeatures[feature]; ok && val.(bool) {
+				filtered = append(filtered, device)
+				break
+			}
+		}
+	}
+	return filtered
 }
 
-func FindDevices() []*ZMKXDevice {
+func FindDevices(features ...string) []*ZMKXDevice {
 	devices := make([]*ZMKXDevice, 0)
-	hid.Enumerate(0, 0, func(info *hid.DeviceInfo) error {
-		if fmt.Sprintf("%#04x", info.ProductID) == ZMKX_PID && fmt.Sprintf("%#04x", info.VendorID) == ZMKX_VID && fmt.Sprintf("%#04x", info.UsagePage) == ZMKX_USAGE {
+	hid.Enumerate(ZmkxVID, ZmkxPID, func(info *hid.DeviceInfo) error {
+		if info.UsagePage == ZmkxUsage {
 			devices = append(devices, &ZMKXDevice{
 				Path:      info.Path,
 				Usage:     info.Usage,
+				UsagePage: info.UsagePage,
 				SerialNbr: info.SerialNbr,
 			})
 		}
 		return nil
 	})
-	return devices
+	return filterDevices(devices, features)
+}
+
+func LoadImage(filename string, threshold uint16) ([]byte, error) {
+	return loadImage(filename, threshold)
 }

@@ -2,6 +2,8 @@ syntax = "proto2";
 
 package UsbComm;
 
+option go_package = "github.com/zaigie/zmkx-go/comm";
+
 enum Action {
   NOP = 0;
   VERSION = 1;
