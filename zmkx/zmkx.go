@@ -26,6 +26,7 @@ func FindDevices(features ...string) []*ZMKXDevice {
 	hid.Enumerate(ZmkxVID, ZmkxPID, func(info *hid.DeviceInfo) error {
 		if info.UsagePage == ZmkxUsage {
 			devices = append(devices, &ZMKXDevice{
+				Name:      info.MfrStr + " " + info.ProductStr,
 				Path:      info.Path,
 				Usage:     info.Usage,
 				UsagePage: info.UsagePage,

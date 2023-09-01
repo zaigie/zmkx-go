@@ -1,7 +1,6 @@
 package zmkx
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/sstallion/go-hid"
@@ -10,6 +9,7 @@ import (
 )
 
 type ZMKXDevice struct {
+	Name      string
 	Path      string
 	Usage     uint16
 	UsagePage uint16
@@ -39,11 +39,11 @@ func (d *ZMKXDevice) call(h2d *usbComm.MessageH2D) *usbComm.MessageD2H {
 	readBuffer := make([]byte, 1+ReportCount)
 
 	for {
-		n, err := opendDevice.Read(readBuffer)
+		_, err := opendDevice.Read(readBuffer)
 		if err != nil {
 			log.Fatalf("Failed to read from device: %v", err)
 		}
-		fmt.Printf("Read %d bytes\n", n)
+		// fmt.Printf("Read %d bytes\n", n)
 
 		// Assuming the device supports multiple reports, so we skip the first byte (report ID)
 		cnt := readBuffer[1]
