@@ -25,6 +25,10 @@ func main() {
 		Short: "Print the version of devices",
 		Run: func(cmd *cobra.Command, args []string) {
 			devices := zmkx.FindDevices()
+			if len(devices) == 0 {
+				fmt.Println("No devices found")
+				os.Exit(0)
+			}
 			for _, device := range devices {
 				fmt.Println("=================================")
 				fmt.Println("Device:", device.Name)
@@ -38,6 +42,10 @@ func main() {
 		Short: "Print the knob config",
 		Run: func(cmd *cobra.Command, args []string) {
 			devices := zmkx.FindDevices()
+			if len(devices) == 0 {
+				fmt.Println("No devices found")
+				os.Exit(0)
+			}
 			for _, device := range devices {
 				fmt.Println("=================================")
 				fmt.Println("Device:", device.Name)
@@ -51,6 +59,10 @@ func main() {
 		Short: "Print the motor state",
 		Run: func(cmd *cobra.Command, args []string) {
 			devices := zmkx.FindDevices()
+			if len(devices) == 0 {
+				fmt.Println("No devices found")
+				os.Exit(0)
+			}
 			for _, device := range devices {
 				fmt.Println("=================================")
 				fmt.Println("Device:", device.Name)
@@ -64,6 +76,10 @@ func main() {
 		Short: "Print the RGB state",
 		Run: func(cmd *cobra.Command, args []string) {
 			devices := zmkx.FindDevices()
+			if len(devices) == 0 {
+				fmt.Println("No devices found")
+				os.Exit(0)
+			}
 			for _, device := range devices {
 				fmt.Println("=================================")
 				fmt.Println("Device:", device.Name)
@@ -78,6 +94,10 @@ func main() {
 		Example: `zmkx-cli eink -f /Users/zaigie/Desktop/keyboard_ink.jpg`,
 		Run: func(cmd *cobra.Command, args []string) {
 			devices := zmkx.FindDevices()
+			if len(devices) == 0 {
+				fmt.Println("No devices found")
+				os.Exit(0)
+			}
 			file, _ := cmd.Flags().GetString("file")
 			threshold, _ := cmd.Flags().GetInt("threshold")
 			if threshold < 0 || threshold > 65535 {
