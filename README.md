@@ -37,6 +37,12 @@ rm -rf dist/ && mkdir -p dist/ && go build -o ./dist/zmkx-cli ./cmd/zmkx-cli/mai
 go mod download
 ```
 
+### Linux Required
+
+```bash
+sudo apt install libudev-dev libusb-1.0-0-dev -y
+```
+
 ### Windows 开发注意事项
 
 本仓库使用的 go-hid 库虽然也是基于 libhidapi，但是在运行过程中需要 GCC 环境编译
