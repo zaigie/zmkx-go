@@ -1,7 +1,7 @@
 package zmkx
 
 import (
-	"log"
+	"errors"
 
 	"github.com/sstallion/go-hid"
 	usbComm "github.com/zaigie/zmkx-go/comm"
@@ -16,15 +16,15 @@ type ZMKXDevice struct {
 	SerialNbr string
 }
 
-func (d *ZMKXDevice) call(h2d *usbComm.MessageH2D) *usbComm.MessageD2H {
+func (d *ZMKXDevice) call(h2d *usbComm.MessageH2D) (*usbComm.MessageD2H, error) {
 	msgOut, err := DelimitedEncode(h2d)
 	if err != nil {
-		log.Fatalf("Failed to encode h2d message: %v", err)
+		return nil, errors.New("Failed to encode h2d message: " + err.Error())
 	}
 
 	opendDevice, err := hid.OpenPath(d.Path)
 	if err != nil {
-		log.Fatalf("Failed to open device: %v", err)
+		return nil, errors.New("Failed to open device: " + err.Error())
 	}
 	defer opendDevice.Close()
 
@@ -41,7 +41,7 @@ func (d *ZMKXDevice) call(h2d *usbComm.MessageH2D) *usbComm.MessageD2H {
 	for {
 		_, err := opendDevice.Read(readBuffer)
 		if err != nil {
-			log.Fatalf("Failed to read from device: %v", err)
+			return nil, errors.New("Failed to read from device: " + err.Error())
 		}
 		// fmt.Printf("Read %d bytes\n", n)
 
@@ -56,36 +56,50 @@ func (d *ZMKXDevice) call(h2d *usbComm.MessageH2D) *usbComm.MessageD2H {
 	// Decode the received message
 	received, err := DelimitedDecode(msgIn)
 	if err != nil {
-		log.Fatalf("Failed to decode d2h message: %v", err)
+		return nil, errors.New("Failed to decode d2h message: " + err.Error())
 	}
 	d2h := &usbComm.MessageD2H{}
 	if err := proto.Unmarshal(received, d2h); err != nil {
-		log.Fatalf("Failed to unmarshal d2h message: %v", err)
+		return nil, errors.New("Failed to unmarshal d2h message: " + err.Error())
 	}
 
-	return d2h
+	return d2h, nil
 }
 
-func (d *ZMKXDevice) GetVersion() map[string]interface{} {
+func (d *ZMKXDevice) GetVersion() (map[string]interface{}, error) {
 	action := usbComm.Action_VERSION
 	h2d := &usbComm.MessageH2D{
 		Action: &action,
 	}
-	d2h := d.call(h2d)
-	return proto2Map(d2h.GetVersion())
+	d2h, err := d.call(h2d)
+	if err != nil {
+		return nil, err
+	}
+	result, err := proto2Map(d2h.GetVersion())
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 // Knob
-func (d *ZMKXDevice) GetKnobConfig() map[string]interface{} {
+func (d *ZMKXDevice) GetKnobConfig() (map[string]interface{}, error) {
 	action := usbComm.Action_KNOB_GET_CONFIG
 	h2d := &usbComm.MessageH2D{
 		Action: &action,
 	}
-	d2h := d.call(h2d)
-	return proto2Map(d2h.GetKnobConfig())
+	d2h, err := d.call(h2d)
+	if err != nil {
+		return nil, err
+	}
+	result, err := proto2Map(d2h.GetKnobConfig())
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
-// func (d *ZMKXDevice) SetKnobConfig(config *usbComm.KnobConfig) map[string]interface{} {
+// func (d *ZMKXDevice) SetKnobConfig(config *usbComm.KnobConfig) (map[string]interface{}, error) {
 // 	action := usbComm.Action_KNOB_SET_CONFIG
 // 	h2d := &usbComm.MessageH2D{
 // 		Action: &action,
@@ -93,32 +107,53 @@ func (d *ZMKXDevice) GetKnobConfig() map[string]interface{} {
 // 			KnobConfig: config,
 // 		},
 // 	}
-// 	d2h := d.call(h2d)
-// 	return proto2Map(d2h.GetKnobConfig())
+// 	d2h, err := d.call(h2d)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	result, err := proto2Map(d2h.GetKnobConfig())
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return result, nil
 // }
 
 // Motor
-func (d *ZMKXDevice) GetMotorState() map[string]interface{} {
+func (d *ZMKXDevice) GetMotorState() (map[string]interface{}, error) {
 	action := usbComm.Action_MOTOR_GET_STATE
 	h2d := &usbComm.MessageH2D{
 		Action: &action,
 	}
-	d2h := d.call(h2d)
-	return proto2Map(d2h.GetMotorState())
+	d2h, err := d.call(h2d)
+	if err != nil {
+		return nil, err
+	}
+	result, err := proto2Map(d2h.GetMotorState())
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 // RGB
-func (d *ZMKXDevice) GetRgbState() map[string]interface{} {
+func (d *ZMKXDevice) GetRgbState() (map[string]interface{}, error) {
 	action := usbComm.Action_RGB_GET_STATE
 	h2d := &usbComm.MessageH2D{
 		Action: &action,
 	}
-	d2h := d.call(h2d)
-	return proto2Map(d2h.GetRgbState())
+	d2h, err := d.call(h2d)
+	if err != nil {
+		return nil, err
+	}
+	result, err := proto2Map(d2h.GetRgbState())
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 // Eink
-func (d *ZMKXDevice) SetEinkImage(imageBytes []byte) map[string]interface{} {
+func (d *ZMKXDevice) SetEinkImage(imageBytes []byte) (map[string]interface{}, error) {
 	action := usbComm.Action_EINK_SET_IMAGE
 	image := &usbComm.EinkImage{
 		Id:   genImageID(),
@@ -130,6 +165,13 @@ func (d *ZMKXDevice) SetEinkImage(imageBytes []byte) map[string]interface{} {
 			EinkImage: image,
 		},
 	}
-	d2h := d.call(h2d)
-	return proto2Map(d2h.GetEinkImage())
+	d2h, err := d.call(h2d)
+	if err != nil {
+		return nil, err
+	}
+	result, err := proto2Map(d2h.GetEinkImage())
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }

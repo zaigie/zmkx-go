@@ -10,7 +10,11 @@ func filterDevices(devices []*ZMKXDevice, features []string) []*ZMKXDevice {
 	}
 	var filtered []*ZMKXDevice
 	for _, device := range devices {
-		deviceFeatures := device.GetVersion()["features"].(map[string]interface{})
+		deviceVersion, err := device.GetVersion()
+		if err != nil {
+			break
+		}
+		deviceFeatures := deviceVersion["features"].(map[string]interface{})
 		for _, feature := range features {
 			if val, ok := deviceFeatures[feature]; ok && val.(bool) {
 				filtered = append(filtered, device)

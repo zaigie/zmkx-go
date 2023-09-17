@@ -9,7 +9,11 @@ import (
 	"github.com/zaigie/zmkx-go/zmkx"
 )
 
-func display(result any) {
+func display(result any, err error) {
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
 	json, err := json.MarshalIndent(result, "", "    ")
 	if err != nil {
 		fmt.Println("Error marshalling JSON:", err)

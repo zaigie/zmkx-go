@@ -2,12 +2,12 @@ package zmkx
 
 import (
 	"encoding/json"
+	"errors"
 	"image"
 	"image/color"
 	"image/draw"
 	_ "image/jpeg"
 	_ "image/png"
-	"log"
 	"math/rand"
 	"os"
 	"time"
@@ -29,18 +29,18 @@ func min(a, b float64) float64 {
 	return b
 }
 
-func proto2Map(a any) map[string]interface{} {
+func proto2Map(a any) (map[string]interface{}, error) {
 	jsonBytes, err := json.Marshal(a)
 	if err != nil {
-		log.Fatal(err)
+		return nil, errors.New("Failed to marshal message: " + err.Error())
 	}
 	var m map[string]interface{}
 	err = json.Unmarshal(jsonBytes, &m)
 	if err != nil {
-		log.Fatal(err)
+		return nil, errors.New("Failed to unmarshal message: " + err.Error())
 	}
 
-	return m
+	return m, nil
 }
 
 func genImageID() *uint32 {
