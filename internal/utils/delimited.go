@@ -1,4 +1,4 @@
-package zmkx
+package utils
 
 import (
 	"bytes"

@@ -2,6 +2,8 @@ package zmkx
 
 import (
 	"github.com/sstallion/go-hid"
+	"github.com/zaigie/zmkx-go/internal/img"
+	u "github.com/zaigie/zmkx-go/internal/utils"
 )
 
 func filterDevices(devices []*ZMKXDevice, features []string) []*ZMKXDevice {
@@ -27,8 +29,8 @@ func filterDevices(devices []*ZMKXDevice, features []string) []*ZMKXDevice {
 
 func FindDevices(features ...string) []*ZMKXDevice {
 	devices := make([]*ZMKXDevice, 0)
-	hid.Enumerate(ZmkxVID, ZmkxPID, func(info *hid.DeviceInfo) error {
-		if info.UsagePage == ZmkxUsage {
+	hid.Enumerate(u.ZmkxVID, u.ZmkxPID, func(info *hid.DeviceInfo) error {
+		if info.UsagePage == u.ZmkxUsage {
 			devices = append(devices, &ZMKXDevice{
 				Name:      info.MfrStr + " " + info.ProductStr,
 				Path:      info.Path,
@@ -43,5 +45,5 @@ func FindDevices(features ...string) []*ZMKXDevice {
 }
 
 func LoadImage(filename string, threshold uint16) ([]byte, error) {
-	return loadImage(filename, threshold)
+	return img.LoadImage(filename, threshold)
 }

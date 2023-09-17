@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/zaigie/zmkx-go/zmkx"
+	"github.com/zaigie/zmkx-go"
 )
 
 func display(result any, err error) {

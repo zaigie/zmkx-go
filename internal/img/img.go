@@ -1,55 +1,19 @@
-package zmkx
+package img
 
 import (
-	"encoding/json"
-	"errors"
 	"image"
 	"image/color"
 	"image/draw"
 	_ "image/jpeg"
 	_ "image/png"
-	"math/rand"
 	"os"
-	"time"
 
 	"github.com/nfnt/resize"
+	u "github.com/zaigie/zmkx-go/internal/utils"
 )
 
-func minInt(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func min(a, b float64) float64 {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func proto2Map(a any) (map[string]interface{}, error) {
-	jsonBytes, err := json.Marshal(a)
-	if err != nil {
-		return nil, errors.New("Failed to marshal message: " + err.Error())
-	}
-	var m map[string]interface{}
-	err = json.Unmarshal(jsonBytes, &m)
-	if err != nil {
-		return nil, errors.New("Failed to unmarshal message: " + err.Error())
-	}
-
-	return m, nil
-}
-
-func genImageID() *uint32 {
-	rand.NewSource(time.Now().UnixNano())
-	num := uint32(rand.Intn(900000) + 100000)
-	return &num
-}
-
-func loadImage(filename string, threshold uint16) ([]byte, error) {
+func LoadImage(filename string, threshold uint16) ([]byte, error) {
+	height, width := u.EinkHeight, u.EinkWidth
 	if threshold == 0 {
 		threshold = 32768
 	}
@@ -65,8 +29,8 @@ func loadImage(filename string, threshold uint16) ([]byte, error) {
 		return nil, err
 	}
 
-	// 2. 创建一个白底的128x296画布
-	canvas := image.NewRGBA(image.Rect(0, 0, 128, 296))
+	// 2. 创建一个白底的画布
+	canvas := image.NewRGBA(image.Rect(0, 0, width, height))
 	white := color.RGBA{255, 255, 255, 255}
 	draw.Draw(canvas, canvas.Bounds(), &image.Uniform{white}, image.Point{}, draw.Src)
 
@@ -74,21 +38,21 @@ func loadImage(filename string, threshold uint16) ([]byte, error) {
 	bounds := img.Bounds()
 	w, h := bounds.Dx(), bounds.Dy()
 	var scaleFactor float64
-	if w > 128 || h > 296 {
-		scaleFactor = min(128.0/float64(w), 296.0/float64(h))
+	if w > width || h > height {
+		scaleFactor = u.MinFloat(float64(width)/float64(w), float64(height)/float64(h))
 	} else {
 		scaleFactor = 1.0
 	}
 	scaledW := int(float64(w) * scaleFactor)
 	scaledH := int(float64(h) * scaleFactor)
 	scaledImg := resize.Resize(uint(scaledW), uint(scaledH), img, resize.Lanczos3)
-	targetRect := image.Rect((128-scaledW)/2, (296-scaledH)/2, (128+scaledW)/2, (296+scaledH)/2)
+	targetRect := image.Rect((width-scaledW)/2, (height-scaledH)/2, (width+scaledW)/2, (height+scaledH)/2)
 	draw.Draw(canvas, targetRect, scaledImg, image.Point{}, draw.Over)
 
 	// 4. 根据阈值，转化图片为纯黑白
 	threshold32 := uint32(threshold)
-	for y := 0; y < 296; y++ {
-		for x := 0; x < 128; x++ {
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
 			r, g, b, _ := canvas.At(x, y).RGBA()
 			avg := (r + g + b) / 3
 			if avg < threshold32 {
@@ -100,13 +64,13 @@ func loadImage(filename string, threshold uint16) ([]byte, error) {
 	}
 
 	// 5. 将处理后的图片转化为1位每像素的字节切片
-	result := make([]byte, 128*296/8)
+	result := make([]byte, width*height/8)
 	index := 0
 	var currentByte byte
 	var bitPosition uint8 = 0
 
-	for y := 0; y < 296; y++ {
-		for x := 0; x < 128; x++ {
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
 			r, g, b, _ := canvas.At(x, y).RGBA()
 			avg := (r + g + b) / 3
 			if avg >= threshold32 {

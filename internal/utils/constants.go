@@ -1,4 +1,4 @@
-package zmkx
+package utils
 
 const (
 	ZmkxVID   uint16 = 0x1d50

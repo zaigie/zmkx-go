@@ -5,6 +5,7 @@ import (
 
 	"github.com/sstallion/go-hid"
 	usbComm "github.com/zaigie/zmkx-go/comm"
+	u "github.com/zaigie/zmkx-go/internal/utils"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -17,7 +18,7 @@ type ZMKXDevice struct {
 }
 
 func (d *ZMKXDevice) call(h2d *usbComm.MessageH2D) (*usbComm.MessageD2H, error) {
-	msgOut, err := DelimitedEncode(h2d)
+	msgOut, err := u.DelimitedEncode(h2d)
 	if err != nil {
 		return nil, errors.New("Failed to encode h2d message: " + err.Error())
 	}
@@ -28,15 +29,15 @@ func (d *ZMKXDevice) call(h2d *usbComm.MessageH2D) (*usbComm.MessageD2H, error) 
 	}
 	defer opendDevice.Close()
 
-	for offset := 0; offset < len(msgOut); offset += PayloadSize {
-		buf := msgOut[offset:minInt(offset+PayloadSize, len(msgOut))]
+	for offset := 0; offset < len(msgOut); offset += u.PayloadSize {
+		buf := msgOut[offset:u.MinInt(offset+u.PayloadSize, len(msgOut))]
 		hdr := []byte{byte(d.Usage), byte(len(buf))}
-		payload := append(hdr, Ljust(buf, 0, PayloadSize)...)
+		payload := append(hdr, u.Ljust(buf, 0, u.PayloadSize)...)
 		opendDevice.Write(payload)
 	}
 
 	msgIn := make([]byte, 0)
-	readBuffer := make([]byte, 1+ReportCount)
+	readBuffer := make([]byte, 1+u.ReportCount)
 
 	for {
 		_, err := opendDevice.Read(readBuffer)
@@ -48,13 +49,13 @@ func (d *ZMKXDevice) call(h2d *usbComm.MessageH2D) (*usbComm.MessageD2H, error) 
 		// Assuming the device supports multiple reports, so we skip the first byte (report ID)
 		cnt := readBuffer[1]
 		msgIn = append(msgIn, readBuffer[2:cnt+2]...) // append read bytes to msgIn
-		if cnt < byte(PayloadSize) {
+		if cnt < byte(u.PayloadSize) {
 			break
 		}
 	}
 
 	// Decode the received message
-	received, err := DelimitedDecode(msgIn)
+	received, err := u.DelimitedDecode(msgIn)
 	if err != nil {
 		return nil, errors.New("Failed to decode d2h message: " + err.Error())
 	}
@@ -75,7 +76,7 @@ func (d *ZMKXDevice) GetVersion() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	result, err := proto2Map(d2h.GetVersion())
+	result, err := u.Proto2Map(d2h.GetVersion())
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +93,7 @@ func (d *ZMKXDevice) GetKnobConfig() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	result, err := proto2Map(d2h.GetKnobConfig())
+	result, err := u.Proto2Map(d2h.GetKnobConfig())
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +112,7 @@ func (d *ZMKXDevice) GetKnobConfig() (map[string]interface{}, error) {
 // 	if err != nil {
 // 		return nil, err
 // 	}
-// 	result, err := proto2Map(d2h.GetKnobConfig())
+// 	result, err := u.Proto2Map(d2h.GetKnobConfig())
 // 	if err != nil {
 // 		return nil, err
 // 	}
@@ -128,7 +129,7 @@ func (d *ZMKXDevice) GetMotorState() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	result, err := proto2Map(d2h.GetMotorState())
+	result, err := u.Proto2Map(d2h.GetMotorState())
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +146,7 @@ func (d *ZMKXDevice) GetRgbState() (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	result, err := proto2Map(d2h.GetRgbState())
+	result, err := u.Proto2Map(d2h.GetRgbState())
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +157,7 @@ func (d *ZMKXDevice) GetRgbState() (map[string]interface{}, error) {
 func (d *ZMKXDevice) SetEinkImage(imageBytes []byte) (map[string]interface{}, error) {
 	action := usbComm.Action_EINK_SET_IMAGE
 	image := &usbComm.EinkImage{
-		Id:   genImageID(),
+		Id:   u.GenImageID(),
 		Bits: imageBytes,
 	}
 	h2d := &usbComm.MessageH2D{
@@ -169,7 +170,7 @@ func (d *ZMKXDevice) SetEinkImage(imageBytes []byte) (map[string]interface{}, er
 	if err != nil {
 		return nil, err
 	}
-	result, err := proto2Map(d2h.GetEinkImage())
+	result, err := u.Proto2Map(d2h.GetEinkImage())
 	if err != nil {
 		return nil, err
 	}
